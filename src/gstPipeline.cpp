@@ -1,7 +1,7 @@
 #include "gstPipeline.h"
 #include <iostream>
-#include <string>   // For std::string and std::to_string
-#include <thread>   // For std::thread
+#include <string>   // std::stringとstd::to_stringのため
+#include <thread>   // std::threadのため
 #include "config.h" // g_config を使用するため
 
 // --- グローバル変数 ---
@@ -35,9 +35,9 @@ static bool create_pipeline(const AppConfig& app_config, int camera_idx, GstElem
     bool is_h264_native_source;
     int rtp_payload_type;
     int rtp_config_interval;
-    int x264_bitrate = 0; // Only for camera 2
-    std::string x264_tune; // Only for camera 2
-    std::string x264_speed_preset; // Only for camera 2
+    int x264_bitrate = 0; // カメラ2のみ
+    std::string x264_tune; // カメラ2のみ
+    std::string x264_speed_preset; // カメラ2のみ
 
     if (camera_idx == 1) {
         device = app_config.gst1_device;

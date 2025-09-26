@@ -1,7 +1,7 @@
 #include "thruster_control.h"
-#include <cmath>     // For std::abs
-#include <algorithm> // For std::max, std::min
-#include <stdio.h>   // For printf
+#include <cmath>     // std::abs のため
+#include <algorithm> // std::max, std::min のため
+#include <stdio.h>   // printf のため
 #include "config.h"  // グローバル設定オブジェクト g_config を使用するため
 
 // 現在のPWM値を保持する静的変数（実際に出力される値）
@@ -91,7 +91,7 @@ void thruster_disable()
 // 水平スラスター制御ロジック (updateThrustersFromSticksの内容を移植・調整)
 static void update_horizontal_thrusters(const GamepadData &data, const AxisData &gyro_data, int target_pwm_out[4])
 {
-    // Initialize target PWM array to neutral/min
+    // 目標PWM配列をニュートラル/最小値に初期化
     for (int i = 0; i < 4; ++i) { // NOLINT
         target_pwm_out[i] = g_config.pwm_min;
     }

@@ -5,7 +5,7 @@
 #include <thread>
 #include <atomic>
 
-// Flag to signal that the configuration has been updated and needs reloading.
+// 設定が更新され、リロードが必要なことを通知するフラグ。
 extern std::atomic<bool> g_config_updated_flag;
 
 class ConfigSynchronizer {

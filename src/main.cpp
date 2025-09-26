@@ -11,7 +11,7 @@
 #include <unistd.h> // POSIX API (usleep)
 #include <string.h> // strlen
 #include <sys/time.h> // gettimeofday
-#include <csignal> // for signal handling
+#include <csignal> // シグナルハンドリング用
 
 
 
@@ -78,7 +78,7 @@ int main()
         if (g_config_updated_flag.load()) {
             std::cout << "Configuration file has been updated. Reloading..." << std::endl;
             loadConfig("config.ini");
-            g_config_updated_flag.store(false); // Reset the flag
+            g_config_updated_flag.store(false); // フラグをリセット
         }
 
         struct timeval current_time_tv;
@@ -109,7 +109,7 @@ int main()
             std::string received_str(recv_buffer, recv_len); // 受信した長さで文字列を作成
 
             latest_gamepad_data = parseGamepadData(received_str); // 受信文字列をパース
-            // std::cout << "受信: " << received_str << std::endl; // Debug
+            // std::cout << "受信: " << received_str << std::endl; // デバッグ
         }
         else // 今回のループではパケット受信なし
         {

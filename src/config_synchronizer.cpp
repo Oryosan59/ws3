@@ -1,6 +1,6 @@
 // ConfigSynchronizer.cpp
 #include "config_synchronizer.h"
-#include "config.h" // for g_config and loadConfig
+#include "config.h" // g_configとloadConfigを使用するため
 #include <iostream>
 #include <string>
 #include <map>
@@ -19,7 +19,7 @@
 #include <cstring>
 #include <signal.h>
 
-// Helper function to trim from both ends of a string
+// 文字列の前後から空白をトリムするヘルパー関数
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\n\r\f\v");
     if (std::string::npos == first) {
@@ -29,7 +29,7 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Global map to hold config data for the synchronizer
+// シンクロナイザ用の設定データを保持するグローバルマップ
 static std::map<std::string, std::map<std::string, std::string>> g_sync_config_data;
 static std::mutex g_config_mutex;
 
@@ -58,23 +58,23 @@ void ConfigSynchronizer::run() {
         return;
     }
 
-    // Keep trying to connect and send the initial config until successful
+    // 成功するまで接続と初期設定の送信を試行し続ける
     while (!m_shutdown_flag.load()) {
         std::cout << "Attempting to connect to WPF to send initial configuration..." << std::endl;
         if (send_config_to_wpf()) {
             std::cout << "Initial configuration sent successfully." << std::endl;
-            break; // Success, exit the loop
+            break; // 成功、ループを抜ける
         }
         std::cerr << "Failed to send initial configuration. Retrying in 5 seconds..." << std::endl;
         
-        // Wait for 5 seconds before retrying, but check shutdown flag periodically
+        // 5秒待ってから再試行するが、シャットダウンフラグを定期的に確認する
         for (int i = 0; i < 5; ++i) {
             if (m_shutdown_flag.load()) break;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 
-    // If not shutting down, proceed to listen for updates
+    // シャットダウン中でなければ、更新のリスニングに進む
     if (!m_shutdown_flag.load()) {
         receive_config_updates();
     }
@@ -170,7 +170,7 @@ void ConfigSynchronizer::update_config_from_string(const std::string& data) {
     if (updates_count > 0) {
         std::cout << "Updated " << updates_count << " config items from WPF." << std::endl;
         save_config();
-        // Signal the main thread to reload the config
+        // メインスレッドに設定のリロードを通知する
         g_config_updated_flag.store(true);
     }
 }
@@ -222,12 +222,12 @@ bool ConfigSynchronizer::send_config_to_wpf() {
 }
 
 void ConfigSynchronizer::handle_client_connection(int client_sock) {
-    // Set a receive timeout on the client socket. This is crucial to prevent
-    // the thread from blocking indefinitely on a recv() call if a client
-    // connects but doesn't send data. An indefinite block would prevent a clean
-    // shutdown of the application.
+    // クライアントソケットに受信タイムアウトを設定します。これは、クライアントが
+    // 接続してもデータを送信しない場合に、スレッドが recv() 呼び出しで
+    // 無期限にブロックされるのを防ぐために重要です。無期限のブロックは、
+    // アプリケーションのクリーンなシャットダウンを妨げます。
     struct timeval tv;
-    tv.tv_sec = 1;  // 1-second timeout
+    tv.tv_sec = 1;  // 1秒のタイムアウト
     tv.tv_usec = 0;
     setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
@@ -235,7 +235,7 @@ void ConfigSynchronizer::handle_client_connection(int client_sock) {
     std::string header;
     char c;
 
-    // Read header
+    // ヘッダーを読み込む
     while (recv(client_sock, &c, 1, 0) > 0) {
         if (c == '\n') break;
         header += c;
