@@ -16,7 +16,10 @@ AppConfig::AppConfig() :
     pwm_min(1100), pwm_neutral(1500), pwm_normal_max(1900), pwm_boost_max(1900), pwm_frequency(50.0f),
     joystick_deadzone(6500),
     led_pwm_channel(9), led_pwm_on(1900), led_pwm_off(1100),
-    led2_pwm_channel(10), led2_pwm_off(1100), led2_pwm_on(1500), led2_pwm_max(1900),
+    led2_pwm_channel(10), led2_pwm_off(1100), led2_pwm_on1(1300), led2_pwm_on2(1600), led2_pwm_max(1900),
+    led3_pwm_channel(11), led3_pwm_off(1100), led3_pwm_on1(1300), led3_pwm_on2(1600), led3_pwm_max(1900),
+    led4_pwm_channel(12), led4_pwm_off(1100), led4_pwm_on1(1300), led4_pwm_on2(1600), led4_pwm_max(1900),
+    led5_pwm_channel(13), led5_pwm_off(1100), led5_pwm_on1(1300), led5_pwm_on2(1600), led5_pwm_max(1900),
     smoothing_factor_horizontal(0.08f), smoothing_factor_vertical(0.04f),
     kp_roll(0.2f), kp_yaw(0.15f), yaw_threshold_dps(0.5f), yaw_gain(1000.0f),
     network_recv_port(12345), network_send_port(12346), client_host("192.168.4.10"), connection_timeout_seconds(0.2),
@@ -98,8 +101,27 @@ bool loadConfig(const std::string& filename) {
             } else if (current_section == "led2") {
                 if (key == "channel") g_config.led2_pwm_channel = std::stoi(value);
                 else if (key == "off_value") g_config.led2_pwm_off = std::stoi(value);
-                else if (key == "on_value") g_config.led2_pwm_on = std::stoi(value);
+                else if (key == "on1_value") g_config.led2_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") g_config.led2_pwm_on2 = std::stoi(value);
                 else if (key == "max_value") g_config.led2_pwm_max = std::stoi(value);
+            } else if (current_section == "led3") {
+                if (key == "channel") g_config.led3_pwm_channel = std::stoi(value);
+                else if (key == "off_value") g_config.led3_pwm_off = std_::stoi(value);
+                else if (key == "on1_value") g_config.led3_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") g_config.led3_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") g_config.led3_pwm_max = std::stoi(value);
+            } else if (current_section == "led4") {
+                if (key == "channel") g_config.led4_pwm_channel = std::stoi(value);
+                else if (key == "off_value") g_config.led4_pwm_off = std::stoi(value);
+                else if (key == "on1_value") g_config.led4_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") g_config.led4_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") g_config.led4_pwm_max = std::stoi(value);
+            } else if (current_section == "led5") {
+                if (key == "channel") g_config.led5_pwm_channel = std::stoi(value);
+                else if (key == "off_value") g_config.led5_pwm_off = std::stoi(value);
+                else if (key == "on1_value") g_config.led5_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") g_config.led5_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") g_config.led5_pwm_max = std::stoi(value);
             } else if (current_section == "thruster_control") {
                 if (key == "smoothing_factor_horizontal") g_config.smoothing_factor_horizontal = std::stof(value);
                 else if (key == "smoothing_factor_vertical") g_config.smoothing_factor_vertical = std::stof(value);
