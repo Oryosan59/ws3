@@ -106,7 +106,7 @@ bool loadConfig(const std::string& filename) {
                 else if (key == "max_value") g_config.led2_pwm_max = std::stoi(value);
             } else if (current_section == "led3") {
                 if (key == "channel") g_config.led3_pwm_channel = std::stoi(value);
-                else if (key == "off_value") g_config.led3_pwm_off = std_::stoi(value);
+                else if (key == "off_value") g_config.led3_pwm_off = std::stoi(value);
                 else if (key == "on1_value") g_config.led3_pwm_on1 = std::stoi(value);
                 else if (key == "on2_value") g_config.led3_pwm_on2 = std::stoi(value);
                 else if (key == "max_value") g_config.led3_pwm_max = std::stoi(value);
