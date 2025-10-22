@@ -31,7 +31,6 @@ static std::string trim(const std::string& str) {
 
 // シンクロナイザ用の設定データを保持するグローバルマップ
 static std::map<std::string, std::map<std::string, std::string>> g_sync_config_data;
-static std::mutex g_config_mutex;
 
 ConfigSynchronizer::ConfigSynchronizer(const std::string& config_path)
     : m_config_path(config_path), m_shutdown_flag(false) {}
