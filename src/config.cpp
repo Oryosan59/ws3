@@ -4,9 +4,12 @@
 #include <algorithm> // for std::transform
 #include <cctype>    // for std::isspace
 #include <atomic>    // for std::atomic
+#include <mutex>     // for std::mutex
 
 // グローバル設定オブジェクトの実体
 AppConfig g_config;
+// グローバルミューテックスの実体
+std::mutex g_config_mutex;
 
 // 設定ファイルが更新されたことをメインスレッドに通知するためのフラグ
 std::atomic<bool> g_config_updated_flag(false);
@@ -56,6 +59,10 @@ bool loadConfig(const std::string& filename) {
         return false;
     }
 
+    // 一時的な設定オブジェクトを作成し、パースがすべて成功した場合にのみ
+    // グローバル設定オブジェクトを更新する。
+    AppConfig temp_config;
+
     std::string line;
     std::string current_section;
     int line_num = 0;
@@ -65,12 +72,10 @@ bool loadConfig(const std::string& filename) {
         line = trim(line);
 
         if (line.empty() || line[0] == '#' || line[0] == ';') {
-            // 空行またはコメント行
             continue;
         }
 
         if (line[0] == '[' && line.back() == ']') {
-            // セクションヘッダー
             current_section = toLower(line.substr(1, line.length() - 2));
             continue;
         }
@@ -84,86 +89,92 @@ bool loadConfig(const std::string& filename) {
         std::string key = toLower(trim(line.substr(0, eq_pos)));
         std::string value = trim(line.substr(eq_pos + 1));
 
-        // 設定値のパースと適用
         try {
             if (current_section == "pwm") {
-                if (key == "pwm_min") g_config.pwm_min = std::stoi(value);
-                else if (key == "pwm_neutral") g_config.pwm_neutral = std::stoi(value);
-                else if (key == "pwm_normal_max") g_config.pwm_normal_max = std::stoi(value);
-                else if (key == "pwm_boost_max") g_config.pwm_boost_max = std::stoi(value);
-                else if (key == "pwm_frequency") g_config.pwm_frequency = std::stof(value);
+                if (key == "pwm_min") temp_config.pwm_min = std::stoi(value);
+                else if (key == "pwm_neutral") temp_config.pwm_neutral = std::stoi(value);
+                else if (key == "pwm_normal_max") temp_config.pwm_normal_max = std::stoi(value);
+                else if (key == "pwm_boost_max") temp_config.pwm_boost_max = std::stoi(value);
+                else if (key == "pwm_frequency") temp_config.pwm_frequency = std::stof(value);
             } else if (current_section == "joystick") {
-                if (key == "deadzone") g_config.joystick_deadzone = std::stoi(value);
+                if (key == "deadzone") temp_config.joystick_deadzone = std::stoi(value);
             } else if (current_section == "led") {
-                if (key == "channel") g_config.led_pwm_channel = std::stoi(value);
-                else if (key == "on_value") g_config.led_pwm_on = std::stoi(value);
-                else if (key == "off_value") g_config.led_pwm_off = std::stoi(value);
+                if (key == "channel") temp_config.led_pwm_channel = std::stoi(value);
+                else if (key == "on_value") temp_config.led_pwm_on = std::stoi(value);
+                else if (key == "off_value") temp_config.led_pwm_off = std::stoi(value);
             } else if (current_section == "led2") {
-                if (key == "channel") g_config.led2_pwm_channel = std::stoi(value);
-                else if (key == "off_value") g_config.led2_pwm_off = std::stoi(value);
-                else if (key == "on1_value") g_config.led2_pwm_on1 = std::stoi(value);
-                else if (key == "on2_value") g_config.led2_pwm_on2 = std::stoi(value);
-                else if (key == "max_value") g_config.led2_pwm_max = std::stoi(value);
+                if (key == "channel") temp_config.led2_pwm_channel = std::stoi(value);
+                else if (key == "off_value") temp_config.led2_pwm_off = std::stoi(value);
+                else if (key == "on1_value") temp_config.led2_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") temp_config.led2_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") temp_config.led2_pwm_max = std::stoi(value);
             } else if (current_section == "led3") {
-                if (key == "channel") g_config.led3_pwm_channel = std::stoi(value);
-                else if (key == "off_value") g_config.led3_pwm_off = std::stoi(value);
-                else if (key == "on1_value") g_config.led3_pwm_on1 = std::stoi(value);
-                else if (key == "on2_value") g_config.led3_pwm_on2 = std::stoi(value);
-                else if (key == "max_value") g_config.led3_pwm_max = std::stoi(value);
+                if (key == "channel") temp_config.led3_pwm_channel = std::stoi(value);
+                else if (key == "off_value") temp_config.led3_pwm_off = std::stoi(value);
+                else if (key == "on1_value") temp_config.led3_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") temp_config.led3_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") temp_config.led3_pwm_max = std::stoi(value);
             } else if (current_section == "led4") {
-                if (key == "channel") g_config.led4_pwm_channel = std::stoi(value);
-                else if (key == "off_value") g_config.led4_pwm_off = std::stoi(value);
-                else if (key == "on1_value") g_config.led4_pwm_on1 = std::stoi(value);
-                else if (key == "on2_value") g_config.led4_pwm_on2 = std::stoi(value);
-                else if (key == "max_value") g_config.led4_pwm_max = std::stoi(value);
+                if (key == "channel") temp_config.led4_pwm_channel = std::stoi(value);
+                else if (key == "off_value") temp_config.led4_pwm_off = std::stoi(value);
+                else if (key == "on1_value") temp_config.led4_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") temp_config.led4_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") temp_config.led4_pwm_max = std::stoi(value);
             } else if (current_section == "led5") {
-                if (key == "channel") g_config.led5_pwm_channel = std::stoi(value);
-                else if (key == "off_value") g_config.led5_pwm_off = std::stoi(value);
-                else if (key == "on1_value") g_config.led5_pwm_on1 = std::stoi(value);
-                else if (key == "on2_value") g_config.led5_pwm_on2 = std::stoi(value);
-                else if (key == "max_value") g_config.led5_pwm_max = std::stoi(value);
+                if (key == "channel") temp_config.led5_pwm_channel = std::stoi(value);
+                else if (key == "off_value") temp_config.led5_pwm_off = std::stoi(value);
+                else if (key == "on1_value") temp_config.led5_pwm_on1 = std::stoi(value);
+                else if (key == "on2_value") temp_config.led5_pwm_on2 = std::stoi(value);
+                else if (key == "max_value") temp_config.led5_pwm_max = std::stoi(value);
             } else if (current_section == "thruster_control") {
-                if (key == "smoothing_factor_horizontal") g_config.smoothing_factor_horizontal = std::stof(value);
-                else if (key == "smoothing_factor_vertical") g_config.smoothing_factor_vertical = std::stof(value);
-                else if (key == "kp_roll") g_config.kp_roll = std::stof(value);
-                else if (key == "kp_yaw") g_config.kp_yaw = std::stof(value);
-                else if (key == "yaw_threshold_dps") g_config.yaw_threshold_dps = std::stof(value);
-                else if (key == "yaw_gain") g_config.yaw_gain = std::stof(value);
+                if (key == "smoothing_factor_horizontal") temp_config.smoothing_factor_horizontal = std::stof(value);
+                else if (key == "smoothing_factor_vertical") temp_config.smoothing_factor_vertical = std::stof(value);
+                else if (key == "kp_roll") temp_config.kp_roll = std::stof(value);
+                else if (key == "kp_yaw") temp_config.kp_yaw = std::stof(value);
+                else if (key == "yaw_threshold_dps") temp_config.yaw_threshold_dps = std::stof(value);
+                else if (key == "yaw_gain") temp_config.yaw_gain = std::stof(value);
             } else if (current_section == "network") {
-                if (key == "recv_port") g_config.network_recv_port = std::stoi(value);
-                else if (key == "send_port") g_config.network_send_port = std::stoi(value);
-                else if (key == "client_host") g_config.client_host = value;
-                else if (key == "connection_timeout_seconds") g_config.connection_timeout_seconds = std::stod(value);
+                if (key == "recv_port") temp_config.network_recv_port = std::stoi(value);
+                else if (key == "send_port") temp_config.network_send_port = std::stoi(value);
+                else if (key == "client_host") temp_config.client_host = value;
+                else if (key == "connection_timeout_seconds") temp_config.connection_timeout_seconds = std::stod(value);
             } else if (current_section == "application") {
-                if (key == "sensor_send_interval") g_config.sensor_send_interval = std::stoul(value);
-                else if (key == "loop_delay_us") g_config.loop_delay_us = std::stoul(value);
+                if (key == "sensor_send_interval") temp_config.sensor_send_interval = std::stoul(value);
+                else if (key == "loop_delay_us") temp_config.loop_delay_us = std::stoul(value);
             } else if (current_section == "gstreamer_camera_1") {
-                if (key == "port") g_config.gst1_port = std::stoi(value);
-                else if (key == "width") g_config.gst1_width = std::stoi(value);
-                else if (key == "height") g_config.gst1_height = std::stoi(value); else if (key == "framerate_num") g_config.gst1_framerate_num = std::stoi(value);
-                else if (key == "framerate_den") g_config.gst1_framerate_den = std::stoi(value); else if (key == "is_h264_native_source") g_config.gst1_is_h264_native_source = (toLower(value) == "true");
-                else if (key == "rtp_payload_type") g_config.gst1_rtp_payload_type = std::stoi(value); else if (key == "rtp_config_interval") g_config.gst1_rtp_config_interval = std::stoi(value);
+                if (key == "port") temp_config.gst1_port = std::stoi(value);
+                else if (key == "width") temp_config.gst1_width = std::stoi(value);
+                else if (key == "height") temp_config.gst1_height = std::stoi(value); else if (key == "framerate_num") temp_config.gst1_framerate_num = std::stoi(value);
+                else if (key == "framerate_den") temp_config.gst1_framerate_den = std::stoi(value); else if (key == "is_h264_native_source") temp_config.gst1_is_h264_native_source = (toLower(value) == "true");
+                else if (key == "rtp_payload_type") temp_config.gst1_rtp_payload_type = std::stoi(value); else if (key == "rtp_config_interval") temp_config.gst1_rtp_config_interval = std::stoi(value);
             } else if (current_section == "gstreamer_camera_2") {
-                if (key == "port") g_config.gst2_port = std::stoi(value);
-                else if (key == "width") g_config.gst2_width = std::stoi(value);
-                else if (key == "height") g_config.gst2_height = std::stoi(value); else if (key == "framerate_num") g_config.gst2_framerate_num = std::stoi(value);
-                else if (key == "framerate_den") g_config.gst2_framerate_den = std::stoi(value); else if (key == "is_h264_native_source") g_config.gst2_is_h264_native_source = (toLower(value) == "true");
-                else if (key == "rtp_payload_type") g_config.gst2_rtp_payload_type = std::stoi(value); else if (key == "rtp_config_interval") g_config.gst2_rtp_config_interval = std::stoi(value);
-                else if (key == "x264_bitrate") g_config.gst2_x264_bitrate = std::stoi(value); else if (key == "x264_tune") g_config.gst2_x264_tune = value;
-                else if (key == "x264_speed_preset") g_config.gst2_x264_speed_preset = value;
+                if (key == "port") temp_config.gst2_port = std::stoi(value);
+                else if (key == "width") temp_config.gst2_width = std::stoi(value);
+                else if (key == "height") temp_config.gst2_height = std::stoi(value); else if (key == "framerate_num") temp_config.gst2_framerate_num = std::stoi(value);
+                else if (key == "framerate_den") temp_config.gst2_framerate_den = std::stoi(value); else if (key == "is_h264_native_source") temp_config.gst2_is_h264_native_source = (toLower(value) == "true");
+                else if (key == "rtp_payload_type") temp_config.gst2_rtp_payload_type = std::stoi(value); else if (key == "rtp_config_interval") temp_config.gst2_rtp_config_interval = std::stoi(value);
+                else if (key == "x264_bitrate") temp_config.gst2_x264_bitrate = std::stoi(value); else if (key == "x264_tune") temp_config.gst2_x264_tune = value;
+                else if (key == "x264_speed_preset") temp_config.gst2_x264_speed_preset = value;
             } else if (current_section == "config_sync") {
-                if (key == "cpp_recv_port") g_config.config_sync_cpp_recv_port = std::stoi(value);
-                else if (key == "wpf_host") g_config.config_sync_wpf_host = value;
-                else if (key == "wpf_recv_port") g_config.config_sync_wpf_recv_port = std::stoi(value);
-            } else {
-                std::cerr << "警告: " << filename << " の " << line_num << " 行目: 不明なセクションまたはキー [" << current_section << "] " << key << "=" << value << std::endl;
+                if (key == "cpp_recv_port") temp_config.config_sync_cpp_recv_port = std::stoi(value);
+                else if (key == "wpf_host") temp_config.config_sync_wpf_host = value;
+                else if (key == "wpf_recv_port") temp_config.config_sync_wpf_recv_port = std::stoi(value);
             }
         } catch (const std::invalid_argument& e) {
             std::cerr << "エラー: " << filename << " の " << line_num << " 行目: 数値変換エラー (" << key << "=" << value << ") - " << e.what() << std::endl;
+            return false; // パース失敗
         } catch (const std::out_of_range& e) {
             std::cerr << "エラー: " << filename << " の " << line_num << " 行目: 数値が範囲外 (" << key << "=" << value << ") - " << e.what() << std::endl;
+            return false; // パース失敗
         }
     }
-    std::cout << "設定ファイル '" << filename << "' を読み込みました。" << std::endl;
+
+    // すべてのパースが成功したら、ロックを取得してグローバル設定をアトミックに更新
+    {
+        std::lock_guard<std::mutex> lock(g_config_mutex);
+        g_config = temp_config;
+    }
+
+    std::cout << "設定ファイル '" << filename << "' を正常に読み込み、適用しました。" << std::endl;
     return true;
 }

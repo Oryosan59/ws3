@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <mutex> // std::mutex をインクルード
 
 // 設定値を保持する構造体
 struct AppConfig {
@@ -104,6 +105,8 @@ struct AppConfig {
 
 // グローバル設定オブジェクト
 extern AppConfig g_config;
+// g_config を保護するためのグローバルミューテックス
+extern std::mutex g_config_mutex;
 
 // 設定ファイルを読み込む関数
 bool loadConfig(const std::string& filename);
