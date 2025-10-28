@@ -30,7 +30,7 @@ AppConfig::AppConfig() :
     gst1_device("/dev/video2"), gst1_port(5000),
     gst1_width(1280), gst1_height(720), gst1_framerate_num(30), gst1_framerate_den(1),
     gst1_is_h264_native_source(true), gst1_rtp_payload_type(96), gst1_rtp_config_interval(1),
-    gst2_device("/dev/video4"), gst2_port(5001),
+    gst2_device("/dev/video6"), gst2_port(5001),
     gst2_width(1280), gst2_height(720), gst2_framerate_num(30), gst2_framerate_den(1),
     gst2_is_h264_native_source(false), gst2_rtp_payload_type(96), gst2_rtp_config_interval(1),
     gst2_x264_bitrate(5000), gst2_x264_tune("zerolatency"), gst2_x264_speed_preset("superfast"),
